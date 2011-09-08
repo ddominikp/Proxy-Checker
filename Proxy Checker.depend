@@ -1,0 +1,8 @@
+# depslib dependency file v1.0
+1315512197 source:/home/ddominikp/c++/cURL project/main.cpp
+	<iostream>
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	<curl/curl.h>
+
