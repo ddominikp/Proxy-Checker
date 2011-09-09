@@ -14,6 +14,7 @@ using namespace std;
 
 string buffer;
 char *ip, *port;
+string *proxyTab;
 int i=0;
 
 static int writer(char *data, size_t size, size_t nmemb, std::string *buffer){
@@ -51,18 +52,28 @@ string proxyWorks(char ip[], int port){
 int main(int argc, char **argv)
 {
     if(argc>1){
+        int proxiesOk = 0, proxiesFail = 0;
+        string tmpProxyWorks;
+
+        proxyTab = new string[argc-1];
+
         for(i=1; i<argc; i++){
             char *pch;
             pch = strtok(argv[i], ":");
-                ip = new char[strlen(pch)];
-                ip = pch;
-                pch = strtok(NULL, ":");
-
-                port = new char[strlen(pch)];
-                port = pch;
-
-            cout <<ip<<":"<<port<<" - "<<proxyWorks(ip, atoi(port))<<endl;
+            ip = new char[strlen(pch)];
+            ip = pch;
+            pch = strtok(NULL, ":");
+            port = new char[strlen(pch)];
+            port = pch;
+            tmpProxyWorks = proxyWorks(ip, atoi(port));
+            cout <<ip<<":"<<port<<" - "<<tmpProxyWorks<<endl;
+            proxyTab[i-1] = (string)ip+":"+(string)port;
+            if(tmpProxyWorks=="ok") proxiesOk++;
+            else proxiesFail++;
         }
+        cout <<"------"<<endl;
+        cout <<"Proxies OK:\t"<<proxiesOk<<endl;
+        cout <<"Proxies FAILED:\t"<<proxiesFail<<endl;
     }
     return 0;
 }
