@@ -30,7 +30,7 @@ string proxyWorks(char ip[], int port){
     CURLcode res;
     ch = curl_easy_init();
     if(ch){
-        curl_easy_setopt(ch, CURLOPT_URL, "http://www.ip-address.org/");
+        curl_easy_setopt(ch, CURLOPT_URL, "http://google.com/");
         curl_easy_setopt(ch, CURLOPT_FOLLOWLOCATION, true);
         curl_easy_setopt(ch, CURLOPT_TIMEOUT, 15);
         curl_easy_setopt(ch, CURLOPT_USERAGENT, "Mozilla/5.0 (compatible; MSIE 8.0; Windows NT 5.1; InfoPath.2; SLCC1; .NET CLR 3.0.4506.2152; .NET CLR 3.5.30729; .NET CLR 2.0.50727)2011-09-08 13:55:49");
@@ -58,16 +58,27 @@ int main(int argc, char **argv)
         proxyTab = new string[argc-1];
 
         for(i=1; i<argc; i++){
-            char *pch;
-            pch = strtok(argv[i], ":");
-            ip = new char[strlen(pch)];
-            ip = pch;
-            pch = strtok(NULL, ":");
-            port = new char[strlen(pch)];
-            port = pch;
-            tmpProxyWorks = proxyWorks(ip, atoi(port));
-            cout <<ip<<":"<<port<<" - "<<tmpProxyWorks<<endl;
-            proxyTab[i-1] = (string)ip+":"+(string)port;
+            char *pch=strchr(argv[i], ':');
+            if(pch!=NULL){
+                pch = NULL;
+                pch = strtok(argv[i], ":");
+                if(pch){
+                    ip = new char[strlen(pch)];
+                    ip = pch;
+                    pch = strtok(NULL, ":");
+                    if(pch){
+                        port = new char[strlen(pch)];
+                        port = pch;
+                        tmpProxyWorks = proxyWorks(ip, atoi(port));
+                        proxyTab[i-1] = (string)ip+":"+(string)port;
+                        cout <<ip<<":"<<port<<" - "<<tmpProxyWorks<<endl;
+                    }
+                }
+            }
+            if(!pch){
+                tmpProxyWorks = "badformat";
+                cout <<argv[i]<<" - "<<tmpProxyWorks<<endl;
+            }
             if(tmpProxyWorks=="ok") proxiesOk++;
             else proxiesFail++;
         }
