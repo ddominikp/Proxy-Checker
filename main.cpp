@@ -5,6 +5,7 @@ USAGE: ./ProxyChecker [ip1:port1] [ip2:port2] [ip3:port3] [ipN:portN]
 */
 
 #include <iostream>
+#include <fstream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -15,10 +16,10 @@ using namespace std;
 string buffer;
 char *ip, *port;
 string *proxyTab;
-int i=0;
+unsigned int i=0;
 
 static int writer(char *data, size_t size, size_t nmemb, std::string *buffer){
-    int result = 0;
+    unsigned int result = 0;
     if (buffer != NULL){
         buffer->append(data, size * nmemb);
         result = size * nmemb;
@@ -49,13 +50,14 @@ string proxyWorks(char ip[], int port){
         }
     } else return "chfail";
 }
-int main(int argc, char **argv)
+int main(unsigned int argc, char **argv)
 {
     if(argc>1){
-        int proxiesOk = 0, proxiesFail = 0;
+        unsigned int proxiesOk = 0, proxiesFail = 0;
         string tmpProxyWorks;
 
         proxyTab = new string[argc-1];
+        int pTabIndex=0;
 
         for(i=1; i<argc; i++){
             char *pch=strchr(argv[i], ':');
@@ -70,7 +72,6 @@ int main(int argc, char **argv)
                         port = new char[strlen(pch)];
                         port = pch;
                         tmpProxyWorks = proxyWorks(ip, atoi(port));
-                        proxyTab[i-1] = (string)ip+":"+(string)port;
                         cout <<ip<<":"<<port<<" - "<<tmpProxyWorks<<endl;
                     }
                 }
@@ -79,12 +80,34 @@ int main(int argc, char **argv)
                 tmpProxyWorks = "badformat";
                 cout <<argv[i]<<" - "<<tmpProxyWorks<<endl;
             }
-            if(tmpProxyWorks=="ok") proxiesOk++;
+            if(tmpProxyWorks=="ok"){
+                proxyTab[pTabIndex] = (string)ip+":"+(string)port;
+                pTabIndex++;
+                proxiesOk++;
+            }
             else proxiesFail++;
         }
         cout <<"------"<<endl;
         cout <<"Proxies OK:\t"<<proxiesOk<<endl;
         cout <<"Proxies FAILED:\t"<<proxiesFail<<endl;
-    }
+
+        char choice;
+        cout <<endl<<"Save proxies to file? [(Y)es or (N)o] ";
+        if(cin >> choice){
+            if(choice=='Y' || choice == 'N' || choice=='y' || choice=='n'){
+                ofstream fp;
+                string filename;
+                cout <<"Path (filename): ";
+                cin >> filename;
+                cout <<endl;
+                fp.open(filename.c_str(), ios::in | ios::trunc);
+                for(i=0; i<proxiesOk; i++)
+                    fp << (string)proxyTab[i]+"\r\n";
+
+                fp.close();
+            }
+        }
+    } else
+        cout <<"No proxies specified."<<endl;
     return 0;
 }
