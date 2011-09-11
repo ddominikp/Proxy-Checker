@@ -28,7 +28,7 @@ static int writer(char *data, size_t size, size_t nmemb, std::string *buffer){
     }
   return result;
 }
-string proxyWorks(char ip[], int port){
+string proxyWorks(string ip, int port){
     CURL *ch;
     CURLcode res;
     ch = curl_easy_init();
@@ -37,7 +37,7 @@ string proxyWorks(char ip[], int port){
         curl_easy_setopt(ch, CURLOPT_FOLLOWLOCATION, true);
         curl_easy_setopt(ch, CURLOPT_TIMEOUT, 15);
         curl_easy_setopt(ch, CURLOPT_USERAGENT, "Mozilla/5.0 (compatible; MSIE 8.0; Windows NT 5.1; InfoPath.2; SLCC1; .NET CLR 3.0.4506.2152; .NET CLR 3.5.30729; .NET CLR 2.0.50727)2011-09-08 13:55:49");
-        curl_easy_setopt(ch, CURLOPT_PROXY, ip);
+        curl_easy_setopt(ch, CURLOPT_PROXY, ip.c_str());
         curl_easy_setopt(ch, CURLOPT_PROXYPORT, port);
         curl_easy_setopt(ch, CURLOPT_WRITEFUNCTION, writer);
         curl_easy_setopt(ch, CURLOPT_WRITEDATA, &buffer);
@@ -63,9 +63,7 @@ int main(int argc, char **argv)
             if(fp.is_open()){
                 string line;
 
-                while(fp.good()){
-                    getline(fp, line);
-
+                while(getline(fp, line)){
                     char *dup=new char[line.length()];
                     strcpy(dup, line.c_str());
                     char *pch=strchr(dup, ':');
@@ -74,7 +72,6 @@ int main(int argc, char **argv)
                         pch = NULL;
                         pch = strtok(dup, ":");
                         if(pch){
-                            ip = new char[strlen(pch)];
                             ip = pch;
                             pch = strtok(NULL, ":");
                             if(pch){
@@ -92,7 +89,7 @@ int main(int argc, char **argv)
                     if(tmpProxyWorks=="ok"){
                         ostringstream ss;
                         ss << port;
-                        proxyTab.push_back((string)ip+":"+ss.str());
+                        proxyTab.push_back(ip+":"+ss.str());
                         pTabIndex++;
                         proxiesOk++;
                     }
@@ -112,7 +109,6 @@ int main(int argc, char **argv)
                     pch = NULL;
                     pch = strtok(argv[i], ":");
                     if(pch){
-                        ip = new char[strlen(pch)];
                         ip = pch;
                         pch = strtok(NULL, ":");
                         if(pch){
@@ -129,7 +125,7 @@ int main(int argc, char **argv)
                 if(tmpProxyWorks=="ok"){
                     ostringstream ss;
                     ss << port;
-                    proxyTab.push_back((string)ip+":"+ss.str());
+                    proxyTab.push_back(ip+":"+ss.str());
                     pTabIndex++;
                     proxiesOk++;
                 }
