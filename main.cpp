@@ -15,8 +15,8 @@ USAGE: ./ProxyChecker [ip1:port1] [ip2:port2] [ip3:port3] [ipN:portN]
 
 using namespace std;
 
-string buffer, tmpProxyWorks, filename;
-char *ip;
+string ip, buffer, tmpProxyWorks, filename;
+stringstream ipPort;
 vector<string> proxyTab;
 int i=0, proxiesOk = 0, proxiesFail = 0, port;
 
@@ -47,9 +47,8 @@ string proxyWorks(string ip, int port){
             if(sizeof(buffer)>0)
                 return "ok";
             else return "fail";
-        } else {
+        } else
             return curl_easy_strerror(res);
-        }
     } else return "chfail";
 }
 int main(int argc, char **argv)
@@ -76,9 +75,9 @@ int main(int argc, char **argv)
                             pch = strtok(NULL, ":");
                             if(pch){
                                 port = atoi(pch);
-
+                                ipPort << ip << ":" << port;
                                 tmpProxyWorks = proxyWorks(ip, port);
-                                cout <<ip<<":"<<port<<" - "<<tmpProxyWorks<<endl;
+                                cout <<ipPort.str()<<" - "<<tmpProxyWorks<<endl;
                             }
                         }
                     }
@@ -87,13 +86,12 @@ int main(int argc, char **argv)
                         cout <<line<<" - "<<tmpProxyWorks<<endl;
                     }
                     if(tmpProxyWorks=="ok"){
-                        ostringstream ss;
-                        ss << port;
-                        proxyTab.push_back(ip+":"+ss.str());
+                        proxyTab.push_back(ipPort.str());
                         pTabIndex++;
                         proxiesOk++;
                     }
                     else proxiesFail++;
+                    ipPort.str("");
                 }
                 fp.close();
             } else{
@@ -113,8 +111,9 @@ int main(int argc, char **argv)
                         pch = strtok(NULL, ":");
                         if(pch){
                             port = atoi(pch);
+                            ipPort << ip << ":" << port;
                             tmpProxyWorks = proxyWorks(ip, port);
-                            cout <<ip<<":"<<port<<" - "<<tmpProxyWorks<<endl;
+                            cout <<ipPort.str()<<" - "<<tmpProxyWorks<<endl;
                         }
                     }
                 }
@@ -123,13 +122,12 @@ int main(int argc, char **argv)
                     cout <<argv[i]<<" - "<<tmpProxyWorks<<endl;
                 }
                 if(tmpProxyWorks=="ok"){
-                    ostringstream ss;
-                    ss << port;
-                    proxyTab.push_back(ip+":"+ss.str());
+                    proxyTab.push_back(ipPort.str());
                     pTabIndex++;
                     proxiesOk++;
                 }
                 else proxiesFail++;
+                ipPort.str("");
             }
     }
         cout <<"------"<<endl;
