@@ -6,17 +6,19 @@ USAGE: ./ProxyChecker [ip1:port1] [ip2:port2] [ip3:port3] [ipN:portN]
 
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <vector>
 #include <curl/curl.h>
 
 using namespace std;
 
-string buffer;
-char *ip, *port;
-string *proxyTab;
-unsigned int i=0;
+string buffer, tmpProxyWorks, filename;
+char *ip;
+vector<string> proxyTab;
+int i=0, proxiesOk = 0, proxiesFail = 0, port;
 
 static int writer(char *data, size_t size, size_t nmemb, std::string *buffer){
     unsigned int result = 0;
@@ -50,61 +52,108 @@ string proxyWorks(char ip[], int port){
         }
     } else return "chfail";
 }
-int main(unsigned int argc, char **argv)
+int main(int argc, char **argv)
 {
     if(argc>1){
-        unsigned int proxiesOk = 0, proxiesFail = 0;
-        string tmpProxyWorks;
+        if(strcmp(argv[1], "-f")==0 && argc==3){
+            ifstream fp;
+            filename = argv[2];
+            fp.open(filename.c_str());
+            int pTabIndex=0;
+            if(fp.is_open()){
+                string line;
 
-        proxyTab = new string[argc-1];
-        int pTabIndex=0;
+                while(fp.good()){
+                    getline(fp, line);
 
-        for(i=1; i<argc; i++){
-            char *pch=strchr(argv[i], ':');
-            if(pch!=NULL){
-                pch = NULL;
-                pch = strtok(argv[i], ":");
-                if(pch){
-                    ip = new char[strlen(pch)];
-                    ip = pch;
-                    pch = strtok(NULL, ":");
+                    char *dup=new char[line.length()];
+                    strcpy(dup, line.c_str());
+                    char *pch=strchr(dup, ':');
+
+                    if(pch!=NULL){
+                        pch = NULL;
+                        pch = strtok(dup, ":");
+                        if(pch){
+                            ip = new char[strlen(pch)];
+                            ip = pch;
+                            pch = strtok(NULL, ":");
+                            if(pch){
+                                port = atoi(pch);
+
+                                tmpProxyWorks = proxyWorks(ip, port);
+                                cout <<ip<<":"<<port<<" - "<<tmpProxyWorks<<endl;
+                            }
+                        }
+                    }
+                    if(!pch){
+                        tmpProxyWorks = "badformat";
+                        cout <<line<<" - "<<tmpProxyWorks<<endl;
+                    }
+                    if(tmpProxyWorks=="ok"){
+                        ostringstream ss;
+                        ss << port;
+                        proxyTab.push_back((string)ip+":"+ss.str());
+                        pTabIndex++;
+                        proxiesOk++;
+                    }
+                    else proxiesFail++;
+                }
+                fp.close();
+            } else{
+                cout <<"File does not exist.";
+                return 0;
+            }
+        } else {
+            int pTabIndex=0;
+
+            for(i=1; i<argc; i++){
+                char *pch=strchr(argv[i], ':');
+                if(pch!=NULL){
+                    pch = NULL;
+                    pch = strtok(argv[i], ":");
                     if(pch){
-                        port = new char[strlen(pch)];
-                        port = pch;
-                        tmpProxyWorks = proxyWorks(ip, atoi(port));
-                        cout <<ip<<":"<<port<<" - "<<tmpProxyWorks<<endl;
+                        ip = new char[strlen(pch)];
+                        ip = pch;
+                        pch = strtok(NULL, ":");
+                        if(pch){
+                            port = atoi(pch);
+                            tmpProxyWorks = proxyWorks(ip, port);
+                            cout <<ip<<":"<<port<<" - "<<tmpProxyWorks<<endl;
+                        }
                     }
                 }
+                if(!pch){
+                    tmpProxyWorks = "badformat";
+                    cout <<argv[i]<<" - "<<tmpProxyWorks<<endl;
+                }
+                if(tmpProxyWorks=="ok"){
+                    ostringstream ss;
+                    ss << port;
+                    proxyTab.push_back((string)ip+":"+ss.str());
+                    pTabIndex++;
+                    proxiesOk++;
+                }
+                else proxiesFail++;
             }
-            if(!pch){
-                tmpProxyWorks = "badformat";
-                cout <<argv[i]<<" - "<<tmpProxyWorks<<endl;
-            }
-            if(tmpProxyWorks=="ok"){
-                proxyTab[pTabIndex] = (string)ip+":"+(string)port;
-                pTabIndex++;
-                proxiesOk++;
-            }
-            else proxiesFail++;
-        }
+    }
         cout <<"------"<<endl;
         cout <<"Proxies OK:\t"<<proxiesOk<<endl;
         cout <<"Proxies FAILED:\t"<<proxiesFail<<endl;
 
-        char choice;
-        cout <<endl<<"Save proxies to file? [(Y)es or (N)o] ";
-        if(cin >> choice){
-            if(choice=='Y' || choice == 'N' || choice=='y' || choice=='n'){
-                ofstream fp;
-                string filename;
-                cout <<"Path (filename): ";
-                cin >> filename;
-                cout <<endl;
-                fp.open(filename.c_str(), ios::in | ios::trunc);
-                for(i=0; i<proxiesOk; i++)
-                    fp << (string)proxyTab[i]+"\r\n";
-
-                fp.close();
+        if(proxiesOk>0){
+            char choice;
+            cout <<endl<<"Save proxies to file? [(Y)es or (N)o] ";
+            if(cin >> choice){
+                if(choice=='Y' || choice == 'y'){
+                    ofstream fp;
+                    cout <<"Path (filename): ";
+                    cin >> filename;
+                    cout <<endl;
+                    fp.open(filename.c_str(), ios::in | ios::trunc);
+                    for(i=0; i<proxiesOk; i++)
+                        fp << (string)proxyTab[i]+"\r\n";
+                    fp.close();
+                }
             }
         }
     } else

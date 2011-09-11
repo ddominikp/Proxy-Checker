@@ -6,3 +6,12 @@
 	<string.h>
 	<curl/curl.h>
 
+1315741590 source:c:\users\oem\documents\c++\proxy checker\main.cpp
+	<iostream>
+	<fstream>
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	<vector>
+	<curl/curl.h>
+
